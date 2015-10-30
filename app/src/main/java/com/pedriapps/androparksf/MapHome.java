@@ -6,6 +6,7 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -18,6 +19,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.util.Calendar;
 
 public class MapHome
         extends FragmentActivity
@@ -63,25 +66,30 @@ public class MapHome
             @Override
             public void onClick(View v) {
                 if (lastLocation != null) {
+                    Calendar c = Calendar.getInstance();
+                    int month = c.get(Calendar.MONTH);
+                    int day = c.get(Calendar.DAY_OF_MONTH);
+                    int year = c.get(Calendar.YEAR);
+                    int hour = c.get(Calendar.HOUR_OF_DAY);
+                    int minutes = c.get(Calendar.MINUTE);
                     map.clear();
                     map.addMarker(new MarkerOptions()
                             .position(latLng)
                             .draggable(false)
                             .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
-                            .title("Parked here"));
+                            .title("Parked here\n" +
+                                    "on " + month + "/" + day + "/" + year + "\n" +
+                                    "at " + hour + ":" + minutes));
                 }
             }
         });
 
-        map.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+        map.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
             @Override
-            public void onMapLongClick(LatLng latLng) {
-                map.clear();
-                map.addMarker(new MarkerOptions()
-                        .position(latLng)
-                        .draggable(true)
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-                        .title("Hello New Marker!"));
+            public void onCameraChange(CameraPosition cameraPosition) {
+                latLng = theMap.getCameraPosition().target;
+                String text = latLng.toString();
+                Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -97,8 +105,14 @@ public class MapHome
         Log.i(TAG, latLng.toString());
 
         theMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
-        CameraPosition cameraPosition = new CameraPosition.Builder().target(latLng).zoom(15).build();
-        theMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+        theMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
+        //if you want to animate the map traveling to your location:
+        //CameraPosition cameraPosition = new CameraPosition.Builder().target(latLng).zoom(15).build();
+        //theMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
+        latLng = theMap.getCameraPosition().target;
+        String text = latLng.toString();
+        Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
     }
 
     @Override
