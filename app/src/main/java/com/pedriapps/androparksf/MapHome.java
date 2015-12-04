@@ -43,6 +43,11 @@ public class MapHome
     private LatLng latLng;
     private GoogleMap theMap;
 
+    private String parkMetersQueryURL;
+    private String operScheduleQueryURL;
+    private String rateScheduleQueryURl;
+    private String RADIUS = "5"; // search radius in meters
+
     private AutoCompleteTextView mAutocompleteView;
     private PlaceAutocompleteAdapter mAdapter;
     private static final LatLngBounds BOUNDS_GREATER_SAN_FRANCISCO = new LatLngBounds(
@@ -154,6 +159,9 @@ public class MapHome
                 latLng = newlatLng;
                 CameraPosition cameraPosition = new CameraPosition.Builder().target(latLng).zoom(17).build();
                 theMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
+                makeParkMetersQuery(Double.toString(latLng.latitude),
+                        Double.toString(latLng.longitude), RADIUS);
 
                 String text = latLng.toString();
                 Log.i(TAG, text);
@@ -329,4 +337,15 @@ public class MapHome
             places.release();
         }
     };
+
+    /**
+     * gives parkMetersQueryURL a query string from URLMaker using the given parameters
+     * @param latitude of the location.
+     * @param longitude of the location.
+     * @param radius of the search.
+     */
+    private void makeParkMetersQuery (String latitude, String longitude, String radius) {
+        URLMaker temp = URLMaker.getInstance();
+        parkMetersQueryURL = temp.makeParkingMetersURL(latitude, longitude, radius);
+    }
 }
