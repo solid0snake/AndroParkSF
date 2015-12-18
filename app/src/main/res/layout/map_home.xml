@@ -26,7 +26,7 @@
         <!-- MAIN CONTENT -->
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent" >
 
             <!-- the map -->
             <fragment
@@ -70,7 +70,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="#ffffff">
+            android:background="#ffffff" >
 
             <TextView
                 android:id="@+id/rates"
@@ -79,7 +79,7 @@
                 android:paddingStart="10dp"
                 android:paddingLeft="10dp"
                 android:paddingEnd="10dp"
-                android:paddingRight="10dp" />
+                android:paddingRight="10dp"/>
 
             <TextView
                 android:id="@+id/schedules"
@@ -88,7 +88,7 @@
                 android:paddingStart="10dp"
                 android:paddingLeft="10dp"
                 android:paddingEnd="10dp"
-                android:paddingRight="10dp" />
+                android:paddingRight="10dp"/>
 
         </LinearLayout>
 
