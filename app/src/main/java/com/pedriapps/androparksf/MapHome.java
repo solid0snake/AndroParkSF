@@ -19,8 +19,10 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -29,8 +31,10 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
-import java.util.Calendar;
+import java.util.ArrayList;
 
 public class MapHome
         extends FragmentActivity
@@ -38,15 +42,15 @@ public class MapHome
         GoogleApiClient.OnConnectionFailedListener {
 
     private GoogleApiClient mGoogleApiClient;
-    public static final String TAG = MapHome.class.getSimpleName();
-    Location lastLocation;
+    private static final String TAG = MapHome.class.getSimpleName();
+    private Location lastLocation;
     private LatLng latLng;
     private GoogleMap theMap;
 
-    private String parkMetersQueryURL;
-    private String operScheduleQueryURL;
-    private String rateScheduleQueryURl;
-    private String RADIUS = "5"; // search radius in meters
+    private ParkLocation parkloc;
+    private ArrayList<RateInfo> tempRates;
+    private ArrayList<OperatingInfo> tempSchedule;
+    private String RADIUS = "10"; // search radius in meters
 
     private AutoCompleteTextView mAutocompleteView;
     private PlaceAutocompleteAdapter mAdapter;
@@ -74,17 +78,18 @@ public class MapHome
         mAutocompleteView.setOnItemClickListener(mAutocompleteClickListener);
 
 
-        /*
+        /* TODO
         creates NETWORK ERROR if using filters :/ , so just use null until Google fixes it.
         Ideally I want just to get addresses.
-         */
+        */
         /*
         Collection<Integer> filterTypes = new ArrayList<Integer>();
         filterTypes.add(Place.TYPE_STREET_ADDRESS);
         AutocompleteFilter autocompleteFilter = AutocompleteFilter.create(filterTypes);
         */
 
-        mAdapter = new PlaceAutocompleteAdapter(this, mGoogleApiClient, BOUNDS_GREATER_SAN_FRANCISCO, null);
+        mAdapter = new PlaceAutocompleteAdapter(this,
+                mGoogleApiClient, BOUNDS_GREATER_SAN_FRANCISCO, null);
         mAutocompleteView.setAdapter(mAdapter);
     }
 
@@ -107,10 +112,8 @@ public class MapHome
         map.getUiSettings().setCompassEnabled(true);
         map.getUiSettings().setMapToolbarEnabled(false);
 
-
-
+        // so the compass and myLocation buttons do not get blocked by address search
         map.setPadding(0, 200, 0, 0);
-
 
         map.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
 
@@ -122,87 +125,115 @@ public class MapHome
             @Override
             public View getInfoContents(Marker arg0) {
 
-                return getLayoutInflater().inflate(R.layout.custom_infowindow, null);
+                View v = getLayoutInflater().inflate(R.layout.custom_infowindow, null);
+                TextView address = (TextView) v.findViewById(R.id.address_infoWindow);
+                TextView capColor = (TextView) v.findViewById(R.id.cap_color_infoWindow);
+                int windowBg;
+                int txtColor = Color.WHITE;
+                TextView sched = (TextView) findViewById(R.id.schedules);
+                TextView ratesTextView = (TextView) findViewById(R.id.rates);
+                SlidingUpPanelLayout panel = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+                LinearLayout ratesSchedule = (LinearLayout) findViewById(R.id.rates_schedules);
 
-            }
-        });
+                // GET INFO and DISPLAY it
+                try {
 
-        /*
-        Button parkHere = (Button) findViewById(R.id.park_button);
+                    String requestUrl = makeParkMetersQuery(Double.toString(latLng.latitude),
+                            Double.toString(latLng.longitude), RADIUS);
+                    parkloc = new MetersHttpRequest(getApplicationContext()).execute(requestUrl).get();
 
-        parkHere.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (lastLocation != null) {
-                    Calendar c = Calendar.getInstance();
-                    int month = c.get(Calendar.MONTH);
-                    int day = c.get(Calendar.DAY_OF_MONTH);
-                    int year = c.get(Calendar.YEAR);
-                    int hour = c.get(Calendar.HOUR_OF_DAY);
-                    int minutes = c.get(Calendar.MINUTE);
-                    map.clear();
-                    map.addMarker(new MarkerOptions()
-                            .position(latLng)
-                            .draggable(false)
-                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
-                            .title("Parked here\n" +
-                                    "on " + month + "/" + day + "/" + year + "\n" +
-                                    "at " + hour + ":" + minutes));
+                    Log.i(TAG, parkloc.getStName());
+                    Log.i(TAG, parkloc.getStNum());
+                    Log.i(TAG, parkloc.getCapColor());
+                    Log.i(TAG, parkloc.getPostID());
+
+                    address.setText(parkloc.getStNum() + " " + parkloc.getStName());
+                    capColor.setText(parkloc.getCapColor() + " meter");
+
+                    switch (parkloc.getCapColor()) {
+                        case "Black":
+                            windowBg = Color.BLACK;
+                            break;
+                        case "Brown":
+                            windowBg = Color.rgb(139,69,19);
+                            break;
+                        case "Green":
+                            windowBg = Color.GREEN;
+                            txtColor = Color.BLACK;
+                            break;
+                        case "Purple":
+                            windowBg = Color.rgb(128,0,128);
+                            break;
+                        case "Red":
+                            windowBg = Color.RED;
+                            txtColor = Color.BLACK;
+                            break;
+                        case "Yellow":
+                            windowBg = Color.YELLOW;
+                            txtColor = Color.BLACK;
+                            break;
+                        default:
+                            windowBg = Color.GRAY;
+                            break;
+                    }
+
+                    ratesSchedule.setBackgroundColor(windowBg);
+                    address.setBackgroundColor(windowBg);
+                    address.setTextColor(txtColor);
+                    capColor.setBackgroundColor(windowBg);
+                    capColor.setTextColor(txtColor);
+                    sched.setTextColor(txtColor);
+                    ratesTextView.setTextColor(txtColor);
+
+                    requestUrl = makeParkScheduleQuery(parkloc.getPostID());
+                    tempSchedule = new ScheduleHttpRequest(getApplicationContext()).execute(requestUrl).get();
+                    parkloc.setSchedule(tempSchedule);
+
+                    requestUrl = makeParkRatesQuery(parkloc.getPostID());
+                    tempRates = new RatesHttpRequest(getApplicationContext()).execute(requestUrl).get();
+                    parkloc.setRates(tempRates);
+
+                    sched.setText(parkloc.getSchedule());
+                    ratesTextView.setText(parkloc.getRates());
+
+                } catch (Exception e) {}
+                //***********************
+
+                if (address.getText().toString().equals("No Data")) {
+                    panel.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+                } else {
+                    panel.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
                 }
+
+                return v;
             }
         });
-        */
 
         map.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(LatLng newlatLng) {
                 latLng = newlatLng;
-                CameraPosition cameraPosition = new CameraPosition.Builder().target(latLng).zoom(17).build();
+                CameraPosition cameraPosition =
+                        new CameraPosition.Builder().target(latLng).zoom(17).build();
                 theMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
-                makeParkMetersQuery(Double.toString(latLng.latitude),
-                        Double.toString(latLng.longitude), RADIUS);
-
-                String text = latLng.toString();
-                Log.i(TAG, text);
-                //Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
                 if (lastLocation != null) {
-                    Calendar c = Calendar.getInstance();
-                    int month = c.get(Calendar.MONTH);
-                    int day = c.get(Calendar.DAY_OF_MONTH);
-                    int year = c.get(Calendar.YEAR);
-                    int hour = c.get(Calendar.HOUR_OF_DAY);
-                    int minutes = c.get(Calendar.MINUTE);
                     theMap.clear();
                     Marker marker = theMap.addMarker(new MarkerOptions()
                             .anchor(0.5f, 0.0f)
                             .visible(true)
                             .position(latLng)
-                            .draggable(false)
-                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-                            .title("Parked here\n" +
-                                    "on " + month + "/" + day + "/" + year + "\n" +
-                                    "at " + hour + ":" + minutes));
+                            .draggable(false));
                     marker.showInfoWindow();
+                    //make marker transparent
                     marker.setAlpha(0.0f);
                 }
 
-                /*
-                Geocoder geocoder;
-                List<Address> addressList = null;
-                geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
-                try {
-                    addressList = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                String address = addressList.get(0).getAddressLine(0);
-                */
                 mAutocompleteView.setText(null);
             }
         });
 
-        /*
+        /* If using marker in the middle and dragging map!!!
         map.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
             @Override
             public void onCameraChange(CameraPosition cameraPosition) {
@@ -223,7 +254,8 @@ public class MapHome
                             .visible(true)
                             .position(latLng)
                             .draggable(false)
-                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                            .icon(BitmapDescriptorFactory
+                                    .defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
                             .title("Parked here\n" +
                                     "on " + month + "/" + day + "/" + year + "\n" +
                                     "at " + hour + ":" + minutes));
@@ -242,16 +274,18 @@ public class MapHome
                 LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         latLng = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
 
-        Log.i(TAG, lastLocation.toString());
-        Log.i(TAG, latLng.toString());
-
-        theMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
+        theMap = ((SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map))
+                .getMap();
         theMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
-        //if you want to animate the map traveling to your location:
-        //CameraPosition cameraPosition = new CameraPosition.Builder().target(latLng).zoom(15).build();
+
+        //if you want to animate the map traveling to your location when the app starts:
+        //CameraPosition cameraPosition =
+        //      new CameraPosition.Builder().target(latLng).zoom(15).build();
         //theMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
-        latLng = theMap.getCameraPosition().target;
+        //get LatLng on myLocation once app starts:
+        //latLng = theMap.getCameraPosition().target;
         //toast LatLng
         //String text = latLng.toString();
         //Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
@@ -273,15 +307,16 @@ public class MapHome
      * Gets the place id of the selected item and issues a request to the Places Geo Data API
      * to retrieve more details about the place.
      *
-     * @see com.google.android.gms.location.places.GeoDataApi#getPlaceById(com.google.android.gms.common.api.GoogleApiClient,
-     * String...)
+     * @see com.google.android.gms.location.places.GeoDataApi
+     *      #getPlaceById(com.google.android.gms.common.api.GoogleApiClient, String...)
      */
     private AdapterView.OnItemClickListener mAutocompleteClickListener
             = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            InputMethodManager imm =
+                    (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
 
             /*
@@ -329,7 +364,8 @@ public class MapHome
             final Place place = places.get(0);
 
             latLng = place.getLatLng();
-            CameraPosition cameraPosition = new CameraPosition.Builder().target(latLng).zoom(17).build();
+            CameraPosition cameraPosition =
+                    new CameraPosition.Builder().target(latLng).zoom(17).build();
             theMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
             Log.i(TAG, "Place details received: " + place.getName());
@@ -339,13 +375,31 @@ public class MapHome
     };
 
     /**
-     * gives parkMetersQueryURL a query string from URLMaker using the given parameters
+     * @return a string from URLMaker using the given parameters
      * @param latitude of the location.
      * @param longitude of the location.
      * @param radius of the search.
      */
-    private void makeParkMetersQuery (String latitude, String longitude, String radius) {
+    private String makeParkMetersQuery (String latitude, String longitude, String radius) {
         URLMaker temp = URLMaker.getInstance();
-        parkMetersQueryURL = temp.makeParkingMetersURL(latitude, longitude, radius);
+        return temp.makeParkingMetersURL(latitude, longitude, radius);
+    }
+
+    /**
+     * @return a string from URLMaker using the given parameter
+     * @param postID of the search.
+     */
+    private String makeParkScheduleQuery (String postID) {
+        URLMaker temp = URLMaker.getInstance();
+        return temp.makeOperScheduleURL(postID);
+    }
+
+    /**
+     * @return a string from URLMaker using the given parameter
+     * @param postID of the search.
+     */
+    private String makeParkRatesQuery (String postID) {
+        URLMaker temp = URLMaker.getInstance();
+        return temp.makeRateScheduleURL(postID);
     }
 }
