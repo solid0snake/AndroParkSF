@@ -1,15 +1,13 @@
 package com.pedriapps.androparksf;
-
-import android.net.Uri;
-import android.util.Log;
-
 /*
  * Created by Pedro on 12/3/2015.
  */
+import android.net.Uri;
+import android.util.Log;
+
 public class URLMaker {
 
     private static URLMaker instance = new URLMaker();
-
     private URLMaker() {}
 
     /**
@@ -58,7 +56,8 @@ public class URLMaker {
                 .authority("data.sfgov.org")
                 .appendPath("resource")
                 .appendPath("6cqg-dxku." + response)
-                .appendQueryParameter("post_id", postID);
+                .appendQueryParameter("post_id", postID)
+                .appendQueryParameter("$order", "priority ASC");
         String myUrl = builder.build().toString();
 
         Log.d("URLMaker", myUrl);
@@ -78,8 +77,9 @@ public class URLMaker {
         builder.scheme("https")
                 .authority("data.sfgov.org")
                 .appendPath("resource")
-                .appendPath("fwjx-32uk." + response)
-                .appendQueryParameter("post_id", postID);
+                .appendPath("fwjv-32uk." + response)
+                .appendQueryParameter("post_id", postID)
+                .appendQueryParameter("$order", "schedule_priority ASC");
         String myUrl = builder.build().toString();
 
         Log.d("URLMaker", myUrl);
