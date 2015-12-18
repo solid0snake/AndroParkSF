@@ -32,15 +32,10 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Adapter that handles Autocomplete requests from the Places Geo Data API.
- * {@link AutocompletePrediction} results from the API are frozen and stored directly in this
- * adapter. (See {@link AutocompletePrediction#freeze()}.)
- * <p>
- * Note that this adapter requires a valid {@link com.google.android.gms.common.api.GoogleApiClient}.
- * The API client must be maintained in the encapsulating Activity, including all lifecycle and
- * connection states. The API client must be connected with the {@link Places#GEO_DATA_API} API.
  */
 public class PlaceAutocompleteAdapter
-        extends ArrayAdapter<AutocompletePrediction> implements Filterable {
+        extends ArrayAdapter<AutocompletePrediction>
+        implements Filterable {
 
     private static final String TAG = "PlaceAutocompleteAdaptr";
     private static final CharacterStyle STYLE_BOLD = new StyleSpan(Typeface.BOLD);
@@ -66,7 +61,6 @@ public class PlaceAutocompleteAdapter
 
     /**
      * Initializes with a resource for text rows and autocomplete query bounds.
-     *
      * @see android.widget.ArrayAdapter#ArrayAdapter(android.content.Context, int)
      */
     public PlaceAutocompleteAdapter(Context context, GoogleApiClient googleApiClient,
@@ -76,14 +70,6 @@ public class PlaceAutocompleteAdapter
         mBounds = bounds;
         mPlaceFilter = filter;
     }
-
-    /**
-     * Sets the bounds for all subsequent queries.
-     */
-    /*
-    public void setBounds(LatLngBounds bounds) {
-        mBounds = bounds;
-    }*/
 
     /**
      * Returns the number of results received in the last autocomplete query.
@@ -191,8 +177,8 @@ public class PlaceAutocompleteAdapter
                             .getAutocompletePredictions(mGoogleApiClient, constraint.toString(),
                                     mBounds, mPlaceFilter);
 
-            // This method should have been called off the main UI thread. Block and wait for at most 60s
-            // for a result from the API.
+            // This method should have been called off the main UI thread.
+            // Block and wait for at most 60s for a result from the API.
             AutocompletePredictionBuffer autocompletePredictions = results
                     .await(60, TimeUnit.SECONDS);
 
