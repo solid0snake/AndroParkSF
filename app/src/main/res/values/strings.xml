@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">AndroPark SF</string>
     <string name="title_activity_map_home">MapHome</string>
+    <string name="connection_error">Connection Error</string>
+    <string name="xml_error">XML Error</string>
+    <string name="no_data">No Data</string>
+    <string name="auto_complete_text">Enter a location</string>
 </resources>

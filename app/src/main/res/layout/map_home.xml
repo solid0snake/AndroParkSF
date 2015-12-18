@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-
+<!-- DrawerLayout for use in next release -->
+<!-- The first section is the main View, the rest are the drawers -->
 <android.support.v4.widget.DrawerLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -7,56 +8,93 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <RelativeLayout
+    <!-- Sliding up panel. -->
+    <!-- Has two sections only. First the main content and second what is to slide in.-->
+    <com.sothree.slidinguppanel.SlidingUpPanelLayout
+        xmlns:sothree="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/sliding_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:gravity="bottom"
+        sothree:umanoDragView="@+id/dragView"
+        sothree:umanoOverlay="true"
+        sothree:umanoPanelHeight="0dp"
+        sothree:umanoParallaxOffset="100dp"
+        sothree:umanoShadowHeight="4dp"
+        sothree:umanoFadeColor="@android:color/transparent" >
 
-        <fragment
+        <!-- MAIN CONTENT -->
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/map"
-            tools:context=".MapHome"
-            android:name="com.google.android.gms.maps.SupportMapFragment"/>
-        <!--
-        <ImageView
-            android:id="@+id/center_pin"
-            android:layout_width="37dip"
-            android:layout_height="37dip"
-            android:src="@drawable/millenium_falcon"
-            android:layout_centerInParent="true"
-            android:adjustViewBounds="true"/>
-        -->
+            android:layout_height="match_parent">
 
-        <AutoCompleteTextView
+            <!-- the map -->
+            <fragment
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/map"
+                tools:context=".MapHome"
+                android:name="com.google.android.gms.maps.SupportMapFragment"/>
+
+            <!-- To be used as a center pin in next release.
+            <ImageView
+                android:id="@+id/center_pin"
+                android:layout_width="37dip"
+                android:layout_height="37dip"
+                android:src="@drawable/millenium_falcon"
+                android:layout_centerInParent="true"
+                android:adjustViewBounds="true"/>
+            -->
+
+            <!-- address search -->
+            <AutoCompleteTextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:id="@+id/address_search"
+                android:background="@drawable/rounded_edit_text"
+                android:layout_centerHorizontal="true"
+                android:layout_margin="12dp"
+                android:ems="10"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:hint="@string/auto_complete_text"
+                android:gravity="center"
+                android:cursorVisible="false"/>
+
+        </RelativeLayout>
+
+        <!-- SLIDING LAYOUT -->
+        <LinearLayout
+            android:id="@+id/rates_schedules"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:id="@+id/address_search"
-            android:background="@drawable/rounded_edit_text"
-            android:layout_centerHorizontal="true"
-            android:layout_margin="12dp"
-            android:ems="10"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:hint="Enter a location"
-            android:gravity="center"
-            android:cursorVisible="false"/>
+            android:orientation="vertical"
+            android:background="#ffffff">
 
-        <!--
-        <Button
-            android:id="@+id/park_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start|bottom"
-            android:text="Park Here"
-            android:padding="10dip"
-            android:layout_alignParentBottom="true"
-            android:layout_alignStart="@id/address_search"
-            android:layout_alignLeft="@id/address_search"
-            android:layout_marginTop="12dip"  />
-        -->
-    </RelativeLayout>
+            <TextView
+                android:id="@+id/rates"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="10dp"
+                android:paddingLeft="10dp"
+                android:paddingEnd="10dp"
+                android:paddingRight="10dp" />
 
+            <TextView
+                android:id="@+id/schedules"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="10dp"
+                android:paddingLeft="10dp"
+                android:paddingEnd="10dp"
+                android:paddingRight="10dp" />
+
+        </LinearLayout>
+
+    </com.sothree.slidinguppanel.SlidingUpPanelLayout>
+
+    <!-- Drawers: left and right
     <ListView
         android:id="@+id/left_drawer"
         android:layout_width="240dip"
@@ -72,5 +110,6 @@
         android:layout_gravity="end"
         android:choiceMode="singleChoice"
         android:background="#cc7d7d7d" />
+    -->
 
 </android.support.v4.widget.DrawerLayout>
