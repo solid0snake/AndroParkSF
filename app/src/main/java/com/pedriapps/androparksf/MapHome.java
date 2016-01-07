@@ -57,6 +57,16 @@ public class MapHome
     private static final LatLngBounds BOUNDS_GREATER_SAN_FRANCISCO = new LatLngBounds(
             new LatLng(37.704887, -122.520512), new LatLng(37.834340, -122.350911));
 
+    View v;
+    TextView address;
+    TextView capColor;
+    int windowBg;
+    int txtColor = Color.WHITE;
+    TextView sched;
+    TextView ratesTextView;
+    SlidingUpPanelLayout panel;
+    LinearLayout ratesSchedule;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -125,15 +135,32 @@ public class MapHome
             @Override
             public View getInfoContents(Marker arg0) {
 
-                View v = getLayoutInflater().inflate(R.layout.custom_infowindow, null);
-                TextView address = (TextView) v.findViewById(R.id.address_infoWindow);
-                TextView capColor = (TextView) v.findViewById(R.id.cap_color_infoWindow);
-                int windowBg;
-                int txtColor = Color.WHITE;
-                TextView sched = (TextView) findViewById(R.id.schedules);
-                TextView ratesTextView = (TextView) findViewById(R.id.rates);
-                SlidingUpPanelLayout panel = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
-                LinearLayout ratesSchedule = (LinearLayout) findViewById(R.id.rates_schedules);
+                if (address.getText().toString().equals("No Data")) {
+                    panel.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+                } else {
+                    panel.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
+                }
+
+                return v;
+            }
+        });
+
+        map.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+            @Override
+            public void onMapLongClick(LatLng newlatLng) {
+                latLng = newlatLng;
+                CameraPosition cameraPosition =
+                        new CameraPosition.Builder().target(latLng).zoom(17).build();
+                theMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
+                v = getLayoutInflater().inflate(R.layout.custom_infowindow, null);
+                address = (TextView) v.findViewById(R.id.address_infoWindow);
+                capColor = (TextView) v.findViewById(R.id.cap_color_infoWindow);
+
+                sched = (TextView) findViewById(R.id.schedules);
+                ratesTextView = (TextView) findViewById(R.id.rates);
+                panel = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+                ratesSchedule = (LinearLayout) findViewById(R.id.rates_schedules);
 
                 // GET INFO and DISPLAY it
                 try {
@@ -155,14 +182,14 @@ public class MapHome
                             windowBg = Color.BLACK;
                             break;
                         case "Brown":
-                            windowBg = Color.rgb(139,69,19);
+                            windowBg = Color.rgb(139, 69, 19);
                             break;
                         case "Green":
                             windowBg = Color.GREEN;
                             txtColor = Color.BLACK;
                             break;
                         case "Purple":
-                            windowBg = Color.rgb(128,0,128);
+                            windowBg = Color.rgb(128, 0, 128);
                             break;
                         case "Red":
                             windowBg = Color.RED;
@@ -198,24 +225,6 @@ public class MapHome
 
                 } catch (Exception e) {}
                 //***********************
-
-                if (address.getText().toString().equals("No Data")) {
-                    panel.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
-                } else {
-                    panel.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
-                }
-
-                return v;
-            }
-        });
-
-        map.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
-            @Override
-            public void onMapLongClick(LatLng newlatLng) {
-                latLng = newlatLng;
-                CameraPosition cameraPosition =
-                        new CameraPosition.Builder().target(latLng).zoom(17).build();
-                theMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
                 if (lastLocation != null) {
                     theMap.clear();
